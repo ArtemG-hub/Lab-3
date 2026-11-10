@@ -1,96 +1,97 @@
-import tkinter as tk
-from tkinter import messagebox
-import random
-import winsound
-import wave
-
+import tkinter as tk  #для создания графического интерфейса
+from tkinter import messagebox   #для вызова всплывающих окон с предупреждениями
+import random 
+import winsound #для работы со звуком в Windows
+import wave     #для создания и записи аудиофайлов формата WAV
 
 def play_music():
-    data = bytearray()
-    for note in [262, 330, 392, 523]:       
-        for i in range(6000):               
-            if (i * note * 2 // 20000) % 2 == 0:
+    data = bytearray() #создаем пустой массив байт для записи звуковых данных с bytearray
+    for note in [262, 330, 392, 523]: #проходим по частотам нот из списка
+        for i in range(6000): 
+            if (i * note * 2 // 20050) % 2 == 0:   #формула генерирует прямоугольную звуковую волну (генерация звука "по байтам")
                 data.append(130)
             else:
-                data.append(126)
-    f = wave.open('melody.wav', 'wb')
-    f.setnchannels(1)
-    f.setsampwidth(1)
-    f.setframerate(22050)
-    f.writeframes(bytes(data))
+                data.append(126) 
+                
+    f = wave.open('melody.wav', 'wb') #открываем файл 'melody.wav' для записи в бинарном режиме ('wb')
+    f.setnchannels(1)      #устанавливаем 1 канал (моно-звук)
+    f.setsampwidth(1)      #устанавливаем размер сэмпла — 1 байт (8 бит)
+    f.setframerate(22050)  #устанавливаем частоту дискретизации (22050 Гц — качество звука)
+    f.writeframes(bytes(data)) #записываем сгенерированные байты звука в файл
     f.close()
-    winsound.PlaySound('melody.wav', winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
-
+    
+    winsound.PlaySound('melody.wav', winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP) #запускаем бесконечное (SND_LOOP) и асинхронное без зависания программывоспроизведение файла
 
 step = 0
 def animate_ui():
-    colors = ["gold", "lime", "aqua", "silver"]
-    global step
-    idx = step % len(colors)
-    word_label.config(fg=colors[idx])
-    btn_generate.config(bg=colors[idx])
-    step += 1
-    window.after(400, animate_ui)
-
+    colors = ["gold", "lime", "aqua", "silver"] #список цветов для мигания элементов
+    global step              #объявляем, что используем глобальную переменную step
+    index = step % len(colors) #находим индекс цвета через остаток от деления, чтобы циклично ходить по списку
+    word_label.config(fg=colors[index]) #меняем цвет текста (fg - foreground) у главного заголовка
+    btn_generate.config(bg=colors[index]) #меняем цвет фона (bg - background) у кнопки генерации
+    step += 1                     #увеличиваем шаг для следующего цвета
+    window.after(500, animate_ui) #рекурсивно вызываем эту же функцию через каждые 500 миллисекунд (создаем таймер)
 
 def cancel():
     window.destroy()
 
 def generate_key():
-    user_input = number_entry.get()
-    if user_input.isdigit() == False or len(user_input) != 6:
+    user_input = number_entry.get() #получаем текст, который пользователь ввел в текстовое поле entry
+
+    if user_input.isdigit() == False or len(value:=user_input) != 6:    
         tk.messagebox.showwarning('Неверный ввод!', 'Нужно ввести 6 цифр!')
-        return 0
-    part_1=user_input[0:3]
-    part_2=user_input[3:6]
-    list_1 = list(part_2)
-    list_2=list(part_1)
-    random.shuffle(list_1)
-    random.shuffle(list_2)
-    letters = "QWERTYUIOPASDFGHJKLZXCVBNM"
-    block_1 = "".join(list_1) + random.choice(letters) + random.choice(letters)
-    block_2 = "".join(list_2) + random.choice(letters) + random.choice(letters)
-    block_3 = int(part_1)+int(part_2)
-    final_list = f"{block_1}-{block_2} {block_3:04d}"
-    used_letters_label.config(text=f"Ключ: {final_list}")
+        return 0 #выходим из функции, прекращая генерацию
+        
+    part_1=user_input[0:3] #берем срез строки: первые 3 цифры (индексы 0, 1, 2)
+    part_2=user_input[3:6] #берем срез строки: последние 3 цифры (индексы 3, 4, 5)
+    list_1 = list(part_2)  #превращаем вторую часть в список символов, чтобы его можно было перемешать
+    list_2 = list(part_1)  #превращаем первую часть в список символов
+    random.shuffle(list_1) #случайным образом перемешиваем элементы внутри списка list_1
+    random.shuffle(list_2) #случайным образом перемешиваем элементы внутри списка list_2
+    
+    letters = "QWERTYUIOPASDFGHJKLZXCVBNM" #строка со всеми доступными английскими буквами
+    block_1 = "".join(list_1) + random.choice(letters) + random.choice(letters) #собираем блок 1: склеиваем перемешанные цифры ("".join) и добавляем 2 случайные буквы
+    block_2 = "".join(list_2) + random.choice(letters) + random.choice(letters) #собираем блок 2: склеиваем перемешанные цифры и добавляем 2 случайные буквы
+    block_3 = int(part_1)+int(part_2)      #вычисляем блок 3: переводим строки в числа и складываем их математически
+    
+    
+    final_list = f"{block_1}-{block_2} {block_3:04d}"     #форматируем финальную строку, подставляем блоки, ":04d" означает вывести число минимум из 4 цифр (добавит нули слева, если число маленькое)
+    used_letters_label.config(text=f"Ключ: {final_list}") #выводим сгенерированный ключ на экран в текстовую метку log
+
+window = tk.Tk()                                  #создаем главное графическое окно программы
+window.title('My app')                            #задаем заголовок окна
+window.geometry('800x460')                        #устанавливаем размеры окна: 800 пикселей в ширину и 460 в высоту
+
+bg_img = tk.PhotoImage(file='image.png')          #загружаем картинку для фонового изображения
+label_bg = tk.Label(window, image=bg_img)         #создаем текстовую метку, в которую помещаем картинку фона
+label_bg.place(x=0, y=0, relwidth=1, relheight=1) #растягиваем фон на всю ширину и высоту окна (relwidth=1, relheight=1)
 
 
-window = tk.Tk()
-window.title('My app')
-window.geometry('800x460')
-bg_img = tk.PhotoImage(file='image.png')
-
-label_bg = tk.Label(window, image=bg_img)
-label_bg.place(x=0, y=0, 
-               relwidth=1, 
-               relheight=1)
-
-word_label = tk.Label(window, 
-                      text='генератор кода', 
-                      font=('Consolas', 40), 
-                      bg='purple', fg='white')
-word_label.place(x=0, y=0, relwidth=1)
-
-letter_label = tk.Label(window, 
-                        text='Введите 6 цифр:', 
-                        font=('Verdana', 14))
-letter_label.place(relx=0.07, rely=0.35)
-number_entry = tk.Entry(window, width=6, font=('Verdana', 16))
-number_entry.insert(0, '')
-number_entry.place(relx=0.8, rely=0.35)
+word_label = tk.Label(window, text='генератор кода', font=('Consolas', 40), bg='purple', fg='white')   #создаем главный заголовок 
+word_label.place(x=0, y=0, relwidth=1)                                    #размещаем заголовок в самом верху (x=0, y=0) во всю ширину окна
 
 
-btn_cancel = tk.Button(window, text='Cancel', width=15, command=cancel)
-btn_cancel.place(relx=0.44, rely=0.7)
-
-btn_generate = tk.Button(window, text ='Generate', width=15, command=generate_key)
-btn_generate.place(relx=0.44, rely=0.6)
+letter_label = tk.Label(window, text='Введите 6 цифр:', font=('Verdana', 14)) #создаем подсказку для пользователя
+letter_label.place(relx=0.07, rely=0.35)                                  #размещаем по относительным координатам (7% от левого края, 35% от верхнего)
 
 
-used_letters_label = tk.Label(window, text='Log:')
-used_letters_label.place(relx=0.5, rely=0.9, anchor='center')
+number_entry = tk.Entry(window, width=6, font=('Verdana', 16))            #создаем текстовое поле Entry шириной в 6 символов для ввода цифр
+number_entry.insert(0, '')                                                #инициализируем поле пустой строкой
+number_entry.place(relx=0.8, rely=0.35)                                   #размещаем в правой части окна (80% от левого края)
 
 
-play_music()
-animate_ui()
-window.mainloop()
+btn_cancel = tk.Button(window, text='Cancel', width=15, command=cancel)   #создаем кнопку отмены, привязываем к ней функцию cancel через параметр command
+btn_cancel.place(relx=0.44, rely=0.7)                                     #размещаем кнопку чуть ниже центра
+
+
+btn_generate = tk.Button(window, text ='Generate', width=15, command=generate_key)  #создаем кнопку генерации, привязываем к ней функцию generate_key через command
+btn_generate.place(relx=0.44, rely=0.6)                                             #размещаем кнопку по центру окна
+
+
+used_letters_label = tk.Label(window, text='Log:')              #создаем текстовое поле (Log) для вывода готового ключа
+
+used_letters_label.place(relx=0.5, rely=0.9, anchor='center')   #размещаем по центру экрана снизу (anchor='center' выравнивает элемент ровно по его собственной середине)
+
+play_music()        #вызываем функцию создания и запуска фоновой музыки
+animate_ui()        #запускаем таймер цикличной смены цветов (анимации)
+window.mainloop()   #запускаем главный бесконечный цикл обработки событий (чтобы окно не закрывалось)
